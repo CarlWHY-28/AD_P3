@@ -1,6 +1,7 @@
 import os
 import csv
 
+
 def nn(adj_matrix, start=0):
     n = len(adj_matrix)
     visited = [False] * n
@@ -17,7 +18,6 @@ def nn(adj_matrix, start=0):
             if not visited[neighbor] and adj_matrix[cur][neighbor] < min_dist and adj_matrix[cur][neighbor] != 0:
                 min_dist = adj_matrix[cur][neighbor]
                 nearest = neighbor
-                
             else:
                 continue
         tour.append(nearest)
