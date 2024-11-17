@@ -1,5 +1,10 @@
 # AD_P3
 
+### 11.17 00:30 Update:
+* Project finished.
+* Added plot functions.
+* Made some functions to improve the readability of the code.
+
 ### 11.16 22:00 Update:
 * Updated the merged program to include D.
 

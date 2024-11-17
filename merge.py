@@ -1,6 +1,9 @@
 import os
 import csv
+import time
 
+import matplotlib.pyplot as plt
+from scipy.stats import wilcoxon
 
 
 def read_map(file_path):
@@ -10,6 +13,55 @@ def read_map(file_path):
         for row in reader:
             matrix.append(list(map(float, row)))  # int will raise error, weird:(
     return matrix
+
+
+def plot_times(t_dict, f_names):
+    print(len(f_names))
+    a_name = list(t_dict.keys())
+    n = len(a_name)
+    n_g = len(f_names)
+    x = range(1, n_g + 1)
+    print(x)
+
+    plt.figure(figsize=(12, 8))
+    for a in a_name:
+        plt.plot(x, t_dict[a], marker='o', label=a)
+
+    plt.xlabel('Graph')
+    plt.ylabel('Time (s)')
+    plt.title('Algorithm Times')
+    plt.xticks(x, [f'{f_name}' for f_name in f_names], rotation=45)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_weights(w_dict, f_names):
+    print(len(f_names))
+
+    best = [float('inf') for i in range(len(f_names))]
+    for i in range(len(f_names)):
+        for key in w_dict:
+            if w_dict[key][i] < best[i]:
+                best[i] = w_dict[key][i]
+    print(best)
+
+    a_name = list(w_dict.keys())
+    n = len(a_name)
+    n_g = len(f_names)
+    x = range(1, n_g + 1)
+
+    plt.figure(figsize=(12, 8))
+    for a in a_name:
+        plt.plot(x, [100 * best[i] / w for i, w in enumerate(w_dict[a])], marker='o', label=a)
+
+    plt.xlabel('Graph')
+    plt.ylabel('Weight (%)')
+    plt.title('Algorithm Weights Score')
+    plt.xticks(x, [f'{f_name}' for f_name in f_names], rotation=45)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
 
 # A
@@ -198,6 +250,26 @@ def main(directory_path):
     files = [f for f in os.listdir(directory_path) if f.endswith('.csv') and not f.startswith('.')]
     files = sorted(files, key=lambda x: int(x.split('n')[0]))
 
+    times = {
+        'Nearest Neighbor': [],
+        'Nearest Insertion': [],
+        'Dynamic Programming': [],
+        'Branch-and-Bound': []
+    }
+
+    output_dict = {
+        'Nearest Neighbor': [],
+        'Nearest Insertion': [],
+        'Dynamic Programming': [],
+        'Branch-and-Bound': []
+    }
+
+    weights = {
+        'Nearest Neighbor': [],
+        'Nearest Insertion': [],
+        'Dynamic Programming': [],
+        'Branch-and-Bound': []
+    }
 
     for idx, file in enumerate(files):
         file_path = os.path.join(directory_path, file)
@@ -208,30 +280,52 @@ def main(directory_path):
         print("\n" + file)
 
         # A. Nearest Neighbor
+        t0 = time.time()
         tour_nn, cost_nn = nearest_neighbor(adj_matrix, start=0)
+        t1 = time.time()
+        times['Nearest Neighbor'].append(t1 - t0)
+        weights['Nearest Neighbor'].append(cost_nn)
         tour = g_t(tour_nn)
         print_result(tour, cost_nn, "A. Nearest Neighbor")
-        output_file.write(f"Nearest Neighbor,{file},{tour},{cost_nn}\n")
+        output_dict['Nearest Neighbor'].append((file, tour, cost_nn))
 
         # B. Nearest Insertion
+        t0 = time.time()
         tour_ni, cost_ni = nearest_insertion(adj_matrix)
+        t1 = time.time()
+        times['Nearest Insertion'].append(t1 - t0)
+        weights['Nearest Insertion'].append(cost_ni)
         tour = g_t(tour_ni)
         print_result(tour, cost_ni, "B. Nearest Insertion")
-        output_file.write(f"Nearest Insertion,{file},{tour},{cost_ni}\n")
+        output_dict['Nearest Insertion'].append((file, tour, cost_ni))
+        # output_file.write(f"Nearest Insertion,{file},{tour},{cost_ni}\n")
 
         # C. Dynamic Programming
-        tour_dp, cost_dp = dynamic_programming_tsp(adj_matrix, start=0)
-        tour = g_t(tour_dp)
-        print_result(tour, cost_dp, "C. Dynamic Programming")
-        output_file.write(f"Dynamic Programming,{file},{tour},{cost_dp}\n")
+        t0 = time.time()
+        tour_dc, cost_dc = dynamic_programming_tsp(adj_matrix, start=0)
+        t1 = time.time()
+        times['Dynamic Programming'].append(t1 - t0)
+        weights['Dynamic Programming'].append(cost_dc)
+        tour = g_t(tour_dc)
+        print_result(tour, cost_dc, "C. Dynamic Programming")
+        output_dict['Dynamic Programming'].append((file, tour, cost_dc))
 
         # D. Branch-and-Bound
+        t0 = time.time()
         tour_bb, cost_bb = branch_and_bound_tsp(adj_matrix, start=0)
+        t1 = time.time()
+        times['Branch-and-Bound'].append(t1 - t0)
+        weights['Branch-and-Bound'].append(cost_bb)
         tour = g_t(tour_bb)
         print_result(tour, cost_bb, "D. Branch-and-Bound")
-        output_file.write(f"Branch-and-Bound,{file},{tour},{cost_bb}\n")
+        output_dict['Branch-and-Bound'].append((file, tour, cost_bb))
 
+    for key in output_dict:
+        for ff in output_dict[key]:
+            output_file.write(f"{key},{ff[0]},{ff[1]},{ff[2]}\n")
 
+    plot_times(times, files)
+    plot_weights(weights, files)
     output_file.close()
 
 
