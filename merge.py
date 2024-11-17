@@ -125,6 +125,67 @@ def dynamic_programming_tsp(adj_matrix, start=0):
     tour = [start] + path
     return tour, total_cost
 
+
+# D. Branch-and-Bound
+def branch_and_bound_tsp(adj_matrix, start=0):
+    n = len(adj_matrix)
+    best_cost = float('inf')
+    best_tour = []
+
+    def length(tour):
+        total = 0
+        for i in range(len(tour) - 1):
+            total += adj_matrix[tour[i]][tour[i + 1]]
+        total += adj_matrix[tour[-1]][tour[0]]
+        return total
+
+    def bound(cur, visited, cur_cost):
+        lb = cur_cost
+        min_out = float('inf')
+        for i in range(n):
+            if i not in visited and adj_matrix[cur][i] < min_out and adj_matrix[cur][i] != 0:
+                min_out = adj_matrix[cur][i]
+        if min_out != float('inf'):
+            lb += min_out
+        else:
+            lb += 0
+        for i in range(n):
+            if i not in visited and i != start:
+                min_in = float('inf')
+                for j in range(n):
+                    if j != i and adj_matrix[j][i] < min_in and adj_matrix[j][i] != 0:
+                        min_in = adj_matrix[j][i]
+                if min_in != float('inf'):
+                    lb += min_in
+                else:
+                    lb += 0
+
+        return lb
+
+    def backtrack(cur, visited, cur_cost, tour):
+        nonlocal best_cost, best_tour
+        if len(visited) == n:
+            if adj_matrix[cur][start] != 0:
+                total_cost = cur_cost + adj_matrix[cur][start]
+                if total_cost < best_cost:
+                    best_cost = total_cost
+                    best_tour = tour + [start]
+            return
+        lb = bound(cur, visited, cur_cost)
+        if lb >= best_cost:
+            return
+
+        for next_node in range(n):
+            if next_node not in visited and adj_matrix[cur][next_node] != 0:
+                visited_next = visited.copy()
+                visited_next.add(next_node)
+                next_cost = cur_cost + adj_matrix[cur][next_node]
+                backtrack(next_node, visited_next, next_cost, tour + [next_node])
+
+    backtrack(start, {start}, 0, [start])
+    return best_tour, best_cost
+
+
 def print_result(tour, cost, name):
     print(f"{name}")
     print(f"Tour: {tour}")
@@ -163,6 +224,12 @@ def main(directory_path):
         tour = g_t(tour_dp)
         print_result(tour, cost_dp, "C. Dynamic Programming")
         output_file.write(f"Dynamic Programming,{file},{tour},{cost_dp}\n")
+
+        # D. Branch-and-Bound
+        tour_bb, cost_bb = branch_and_bound_tsp(adj_matrix, start=0)
+        tour = g_t(tour_bb)
+        print_result(tour, cost_bb, "D. Branch-and-Bound")
+        output_file.write(f"Branch-and-Bound,{file},{tour},{cost_bb}\n")
 
 
     output_file.close()
