@@ -96,6 +96,34 @@ def nearest_insertion(adj_matrix):
     return tour, total_weight
 
 
+# C
+def dynamic_programming_tsp(adj_matrix, start=0):
+    n = len(adj_matrix)
+    memo = {}
+
+    def visit(mask, cur):
+        if (mask, cur) in memo:
+            return memo[(mask, cur)]
+        if mask == (1 << n) - 1:
+            return adj_matrix[cur][start], [start]
+
+        min_cost = float('inf')
+        path = []
+        for neighbor in range(n):
+            if adj_matrix[cur][neighbor] != 0 and not (mask & (1 << neighbor)):  # not visited and not self
+                # print(mask)
+                new_cost, new_path = visit(mask | (1 << neighbor), neighbor)
+                total_cost = adj_matrix[cur][neighbor] + new_cost
+                if total_cost < min_cost:  # find the min cost
+                    min_cost = total_cost
+                    path = [neighbor] + new_path
+        memo[(mask, cur)] = (min_cost, path)
+        return memo[(mask, cur)]
+
+    total_cost, path = visit(1 << start, start)
+    # Reconstruct
+    tour = [start] + path
+    return tour, total_cost
 
 def print_result(tour, cost, name):
     print(f"{name}")
@@ -129,6 +157,13 @@ def main(directory_path):
         tour = g_t(tour_ni)
         print_result(tour, cost_ni, "B. Nearest Insertion")
         output_file.write(f"Nearest Insertion,{file},{tour},{cost_ni}\n")
+
+        # C. Dynamic Programming
+        tour_dp, cost_dp = dynamic_programming_tsp(adj_matrix, start=0)
+        tour = g_t(tour_dp)
+        print_result(tour, cost_dp, "C. Dynamic Programming")
+        output_file.write(f"Dynamic Programming,{file},{tour},{cost_dp}\n")
+
 
     output_file.close()
 

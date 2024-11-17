@@ -1,5 +1,9 @@
 # AD_P3
 
+### 11.16 21:15 Update:
+* Updated the merged program to include C.
+* Made some functions to improve the readability of the code.
+
 ### 11.16 21:00 Update:
 * Updated B and the merged program.
 
