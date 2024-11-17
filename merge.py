@@ -2,6 +2,35 @@ import os
 import csv
 
 
+def nn(adj_matrix, start=0):
+    n = len(adj_matrix)
+    visited = [False] * n
+    tour = [start]
+    total_weight = 0
+    cur = start
+    visited[cur] = True
+
+    for ff in range(n - 1):  # no start
+        nearest = None
+
+        min_dist = float('inf')
+        for neighbor in range(n):
+            if not visited[neighbor] and adj_matrix[cur][neighbor] < min_dist and adj_matrix[cur][neighbor] != 0:
+                min_dist = adj_matrix[cur][neighbor]
+                nearest = neighbor
+            else:
+                continue
+        tour.append(nearest)
+        total_weight += min_dist
+        cur = nearest
+        visited[cur] = True
+
+    # if adj_matrix[cur][start] == 0:
+    #     print('111111111')
+    tour.append(start)
+    total_weight += adj_matrix[cur][start]
+    return tour, total_weight
+
 def ni(adj_matrix):
     n = len(adj_matrix)
     min_weight = float('inf')
@@ -10,15 +39,15 @@ def ni(adj_matrix):
         for j in range(i + 1, n):
             if adj_matrix[i][j] < min_weight and adj_matrix[i][j] != 0:
                 min_weight = adj_matrix[i][j]
-                start_link = (i, j)  # shortest edge                                                    
-    # print(f"Start Link: {start_link}")                                                                
+                start_link = (i, j)  # shortest edge
+    # print(f"Start Link: {start_link}")
 
     tour = list(start_link) + [start_link[0]]
     total_weight = adj_matrix[start_link[0]][start_link[1]] * 2
     visited = set(tour)
 
     while len(visited) < n:
-        # Find                                                                                          
+        # Find
         nearest_node = None
         min_dist = float('inf')
         for node in range(n):
@@ -27,9 +56,9 @@ def ni(adj_matrix):
                     if adj_matrix[node][tour_node] < min_dist and adj_matrix[node][tour_node] != 0:
                         min_dist = adj_matrix[node][tour_node]
                         nearest_node = node
-                        # print(f"Nearest Node: {nearest_node}")                                                        
+                        # print(f"Nearest Node: {nearest_node}")
 
-        # Insert                                                                                        
+        # Insert
         best_w = float('inf')
         best_p = -1
         for i in range(len(tour) - 1):
@@ -63,6 +92,20 @@ def main(fpath):
 
         n = len(adj_matrix)
         print("\n" + file)
+        print('A')
+        tour, cost = nn(adj_matrix, start=0)
+
+        str = ''
+        for i in range(len(tour) - 1):
+            str += f'{tour[i]}->'
+        str += f'{tour[0]}'
+
+        print(f"Tour: {str}")
+        print(f"Total Weight: {cost}")
+        output_file.write(f"Nearest Neighbor,{file},{str},{cost}\n")
+
+        print('B')
+
         tour, cost = ni(adj_matrix)
 
         str = ''
@@ -73,6 +116,7 @@ def main(fpath):
         print(f"Tour: {str}")
         print(f"Total Weight: {cost}")
         output_file.write(f"Nearest Insertion,{file},{str},{cost}\n")
+
     output_file.close()
 
 
