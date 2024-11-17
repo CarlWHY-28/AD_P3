@@ -2,7 +2,18 @@ import os
 import csv
 
 
-def nn(adj_matrix, start=0):
+
+def read_map(file_path):
+    with open(file_path, 'r', newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        matrix = []
+        for row in reader:
+            matrix.append(list(map(float, row)))  # int will raise error, weird:(
+    return matrix
+
+
+# A
+def nearest_neighbor(adj_matrix, start=0):
     n = len(adj_matrix)
     visited = [False] * n
     tour = [start]
@@ -10,9 +21,8 @@ def nn(adj_matrix, start=0):
     cur = start
     visited[cur] = True
 
-    for ff in range(n - 1):  # no start
+    for ff in range(n - 1):
         nearest = None
-
         min_dist = float('inf')
         for neighbor in range(n):
             if not visited[neighbor] and adj_matrix[cur][neighbor] < min_dist and adj_matrix[cur][neighbor] != 0:
@@ -31,7 +41,17 @@ def nn(adj_matrix, start=0):
     total_weight += adj_matrix[cur][start]
     return tour, total_weight
 
-def ni(adj_matrix):
+
+def g_t(tour):
+    str = ''
+    for i in range(len(tour) - 1):
+        str += f'{tour[i]}->'
+    str += f'{tour[0]}'
+    return str
+
+
+# B
+def nearest_insertion(adj_matrix):
     n = len(adj_matrix)
     min_weight = float('inf')
     start_link = (0, 0)
@@ -56,7 +76,7 @@ def ni(adj_matrix):
                     if adj_matrix[node][tour_node] < min_dist and adj_matrix[node][tour_node] != 0:
                         min_dist = adj_matrix[node][tour_node]
                         nearest_node = node
-                        # print(f"Nearest Node: {nearest_node}")
+        # print(f"Nearest Node: {nearest_node}")
 
         # Insert
         best_w = float('inf')
@@ -76,46 +96,39 @@ def ni(adj_matrix):
     return tour, total_weight
 
 
-def main(fpath):
+
+def print_result(tour, cost, name):
+    print(f"{name}")
+    print(f"Tour: {tour}")
+    print(f"Total Weight: {cost}")
+
+
+def main(directory_path):
     output_file = open('output.csv', 'w', newline='')
     output_file.write('Algorithm,File,Tour: Sequence of nodes,Total weight\n')
-    files = [f for f in os.listdir(fpath) if f.endswith('.csv') and not f.startswith('.')]
+    files = [f for f in os.listdir(directory_path) if f.endswith('.csv') and not f.startswith('.')]
     files = sorted(files, key=lambda x: int(x.split('n')[0]))
 
-    for idx, file in enumerate(files):
-        file_path = os.path.join(fpath, file)
-        with open(file_path, 'r', newline='') as csvfile:
-            reader = csv.reader(csvfile)
-            adj_matrix = []
-            for row in reader:
-                adj_matrix.append(list(map(float, row)))  # int will raise error, weird:(
 
+    for idx, file in enumerate(files):
+        file_path = os.path.join(directory_path, file)
+        adj_matrix = read_map(file_path)
+
+        # print(adj_matrix)
         n = len(adj_matrix)
         print("\n" + file)
-        print('A')
-        tour, cost = nn(adj_matrix, start=0)
 
-        str = ''
-        for i in range(len(tour) - 1):
-            str += f'{tour[i]}->'
-        str += f'{tour[0]}'
+        # A. Nearest Neighbor
+        tour_nn, cost_nn = nearest_neighbor(adj_matrix, start=0)
+        tour = g_t(tour_nn)
+        print_result(tour, cost_nn, "A. Nearest Neighbor")
+        output_file.write(f"Nearest Neighbor,{file},{tour},{cost_nn}\n")
 
-        print(f"Tour: {str}")
-        print(f"Total Weight: {cost}")
-        output_file.write(f"Nearest Neighbor,{file},{str},{cost}\n")
-
-        print('B')
-
-        tour, cost = ni(adj_matrix)
-
-        str = ''
-        for i in range(len(tour) - 1):
-            str += f'{tour[i]}->'
-        str += f'{tour[0]}'
-
-        print(f"Tour: {str}")
-        print(f"Total Weight: {cost}")
-        output_file.write(f"Nearest Insertion,{file},{str},{cost}\n")
+        # B. Nearest Insertion
+        tour_ni, cost_ni = nearest_insertion(adj_matrix)
+        tour = g_t(tour_ni)
+        print_result(tour, cost_ni, "B. Nearest Insertion")
+        output_file.write(f"Nearest Insertion,{file},{tour},{cost_ni}\n")
 
     output_file.close()
 
